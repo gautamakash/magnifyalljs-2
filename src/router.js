@@ -1,10 +1,20 @@
+/**
+ * Route Class
+ * @constructor
+ * @param {JSON} _config - Configuratin for route object
+ * @author Akash Gautam
+ */
 var Route = function(_config){
     this.name = _config.name;
     this.obj = _config.obj;
     this.onEnter = _config.onEnter;
     this.onLeave = _config.onLeave;
 }
-
+/**
+ * Router Class
+ * @constructor
+ * @param {JSON} _config - Configuratin for router object
+ */
 var Router = function(_config){
   var _instance = this;
   this.id = _config.id;
@@ -19,10 +29,20 @@ var Router = function(_config){
       this.routes[_route.name] = _route;
     }
   }
+  /**
+   * Add Route object to router
+   * @public
+   * @param {Object} _route Route object
+   */
   this.addRoute = function(_route){
       this.routes[_route.name] = _route;
   }
   this.bindElement = _config.bindElement || false;
+   /**
+   * Bind Dom element to this Router
+   * @public
+   * @param {Object} _ele Dom Node
+   */
   this.bind = function(_ele){
        this.bindElement = _ele || this.bindElement;
   }
@@ -46,7 +66,11 @@ var Router = function(_config){
       }
     }
   }
-
+ /**
+   * Load route by route Name
+   * @public
+   * @param {string} _routeName Route name
+   */
   this.loadRoute = function(_routeName){
     if(_instance.routes[_routeName]
     && _instance.bindElement){

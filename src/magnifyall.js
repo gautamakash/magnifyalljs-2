@@ -1,15 +1,16 @@
-/**
- * Magnifyall core file
- */
 
 var __systems = {};
 var __aops = {};
 
+/**
+ * System Class
+ * @constructor
+ * @param {JSON} _settings - Configuratin for system object
+ * @author Akash Gautam
+ */
 var System = function(_settings){
     _settings = _settings || {};
-    /**
-     * Public variables
-     */
+    
     // System Name
     this.name = _settings.name || "default";
     // Check if system is already initialize then return the System
@@ -28,7 +29,7 @@ var System = function(_settings){
     
 
 
-    /**
+    /*
      * Private Variables
      */
     var _instance = this;
@@ -49,10 +50,13 @@ var System = function(_settings){
     // System Cache
     var _cache = {};
 
-    /**
-     * Public Methods
-     */
+    
     // generate GUID
+    /**
+     * Generate UID
+     * @public
+     * @return {string} unique GUID
+     */
     this.getUID = function(){
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
@@ -63,16 +67,36 @@ var System = function(_settings){
             s4() + '-' + s4() + s4() + s4();
     };
     // Register Object to Pool
+    
+    /**
+     * Register System Generated Object:- Could be use to register diffrent System object
+     * @public
+     * @param {Object} _obj System generated object
+     */
     this.registerObject = function(_obj){
         if(_obj && _obj.__UID){
             _uids[_obj.__UID] = _obj;
         }
     };
-    // get Object from pool
+    // get Object from pool    
+    /**
+     * Get object by UID if generated or register by current System
+     * @public
+     * @param {string} _uid Object uid <Object>.__UID
+     * @return {Object} Object from object pool
+     */
     this.getObjectByUID = function(_uid){
         return _uids[_uid];
     };
     // Import Class
+     
+    /**
+     * Import Class in system from System source path
+     * @public
+     * @param {string} _package Package defination of class, like com.magnifyall.Test represent <system.src>/com/magnifyall/Test.js
+     * @param {function} _onImportCallBack Callback method called once import complete
+     * @return {Object} this object (current system object)
+     */
     this.import = function(_package, _onImportCallBack){
         if(!_classList[_package]){
             _importQueue.push({package: _package, onLoad: _onImportCallBack});
@@ -86,6 +110,12 @@ var System = function(_settings){
     };
     
     // Append Bean Config
+    /**
+     * Append Bean Configutation for package defination (cann't override if already define).
+     * @public
+     * @param {string} _className Package defination of class, like com.magnifyall.Test
+     * @param {Object} _config Configuration for Bean Factory
+     */
     this.appendBeanConfig = function(_className, _config){
         if(_beanFactory && !_beanFactory[_className]){
             _beanFactory[_className] = _config;
@@ -93,6 +123,13 @@ var System = function(_settings){
     }
 
     // get Bean
+    /**
+     * return Bean for class if Bean Factory Configuration is already defined
+     * @public
+     * @param {string} _class Package defination of class, like com.magnifyall.Test
+     * @param {Object} _query Will passed to <BeanConfiguration>.fetchService(_query, _callBack)
+     * @param {Object} _callback  Callback method will passed to fetchService function
+     */
     this.getBean = function(_class, _query, _callback){
         if(_beanFactory && _beanFactory[_class]){
             this.import(_class, function(){
@@ -122,6 +159,12 @@ var System = function(_settings){
         }
     }
     // update bean
+    /**
+     * Update Bean for class if Bean Factory Configuration is already defined
+     * @public
+     * @param {Object} _obj Bean object created by current system
+     * @param {Object} _callback  Callback method will passed to updateService function
+     */
     this.updateBean = function(_obj, _callback){
         var _className = _obj.__getClassName();
         if(_beanFactory && _beanFactory[_className]){
@@ -138,13 +181,18 @@ var System = function(_settings){
         return;
     }
     // Create new thread and execute code.
+    /**
+     * Run in new thread
+     * @public
+     * @param {Object} _fnc  function to call in new thread
+     */
     this.run = function(_fnc){
         setTimeout(_fnc, 0);
     };
 
     //Template Processor
     
-    /**
+    /*
      * Template Processor
      */
     var TemplateProcessor = function(_config){
@@ -420,7 +468,7 @@ var System = function(_settings){
             }
     }
 
-    /**
+    /*
      * AOP Implementation
      */
     // Update String function with Aspects
@@ -486,7 +534,7 @@ var System = function(_settings){
         return _aopDetail;
     };
 
-    /**
+    /*
      * Depending import
      */
     var _addDependedImport = function(_fileString, _importConfig){
@@ -507,7 +555,7 @@ var System = function(_settings){
         return _fileString;
     }
 
-    /**
+    /*
      * loop Import Process 
      */
     var _importProcess = function(){

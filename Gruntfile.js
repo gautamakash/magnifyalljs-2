@@ -21,7 +21,7 @@ module.exports = function(grunt){
             }
         },
         clean: {
-            src: ['lib', 'app/lib']
+            src: ['lib', 'app/lib', 'app/doc']
         },
         concat: {
             options: {
@@ -69,6 +69,13 @@ module.exports = function(grunt){
                 }
             }
             }
+        },jsdoc : {
+            dist : {
+                src: ['src/*.js'],
+                options: {
+                    destination: 'app/doc'
+                }
+            }
         }
     });
 
@@ -81,8 +88,9 @@ module.exports = function(grunt){
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-jsdoc');
 
     // Define Tasks
-    grunt.registerTask('build', ['clean', 'concat', 'uglify', 'copy']);
+    grunt.registerTask('build', ['clean', 'jsdoc', 'concat', 'uglify', 'copy']);
     grunt.registerTask('default', ['build', 'connect', 'watch']);
 };
