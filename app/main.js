@@ -10,7 +10,17 @@ var system = new System({
             console.log("_aopData: ", _aopData);
             console.log("_aurg: ", _aurg);
         }
-    }]
+    }],
+    beanFactory: {
+        "com.Bean": {
+            fetchService: function(_query, _callBack){
+                _callBack(JSON.stringify({id: _query, name: 'Bean Name'}));
+            }
+        }
+    },
+    jsonLD: {
+        "WebSite": "com.WebSite"
+    }
 });
 
 system.import("com.Test", function(){
@@ -19,4 +29,8 @@ system.import("com.Test", function(){
     test.show();
 }).import("com.Test1", function(){
     window.test1 = new com.Test1();
+});
+system.getBean("com.Bean", "001", function(_obj){
+    window.bean = _obj;
+    console.log(bean.serialize());
 });

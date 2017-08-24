@@ -84,10 +84,64 @@ var System = function(_settings){
         }
         return this;
     };
-    // Dump Import Queue
-    this.dumpImportQueue= function(){
-        return _importQueue;
+    
+    // Append Bean Config
+    this.appendBeanConfig = function(_className, _config){
+        if(_beanFactory && !_beanFactory[_className]){
+            _beanFactory[_className] = _config;
+        }
+    }
+
+    // get Bean
+    this.getBean = function(_class, _query, _callback){
+        if(_beanFactory && _beanFactory[_class]){
+            this.import(_class, function(){
+                var _beanConfig = _beanFactory[_class];
+                var _data = {};
+                var _dataId = _class+JSON.stringify(_query).replace(/{|}|"|:/g , "_");
+                if(_beans[_dataId]){
+                    _callback(_beans[_dataId]);
+                    return;
+                }
+                
+                if(_beanConfig && _beanConfig.fetchService){
+                    _beanConfig.fetchService(_query, function(_dataString){
+                        _data = JSON.parse(_dataString);
+                        var _classObj = window;
+                        var _classArr = _class.split('.');
+                        for(var _classI = 0; _classI < _classArr.length; _classI++){
+                            _classObj = _classObj[_classArr[_classI]];
+                        }
+                        var _bean = new _classObj(_data);
+                        _beans[_dataId] = _bean;
+                        //_beans[_bean.__UID] = _bean;
+                        _callback(_beans[_dataId]);
+                    })
+                }
+            });
+        }
+    }
+    // update bean
+    this.updateBean = function(_obj, _callback){
+        var _className = _obj.__getClassName();
+        if(_beanFactory && _beanFactory[_className]){
+            var _beanConfig = _beanFactory[_className];
+            if(_beanConfig && _beanConfig.updateService){
+                _beanConfig.updateService(_obj, _callback);
+                return;
+            }else{
+                _callback(false);
+                return;
+            }
+        }
+        _callback(false);
+        return;
+    }
+    // Create new thread and execute code.
+    this.run = function(_fnc){
+        setTimeout(_fnc, 0);
     };
+
     //Template Processor
     
     /**
@@ -470,7 +524,7 @@ var System = function(_settings){
                 }
                 _initiateProxy(_fileString, _instance.lib, _instance.src, _currentImportPackage, function(_fileString){
                     //console.log(_fileString);
-                    console.log(_importConfig);
+                    //console.log(_importConfig);
                     eval(_fileString);
                     _classList[_currentImportPackage] = _fileString;
                     if(_importConfig.onLoad){
@@ -500,5 +554,52 @@ var System = function(_settings){
         });
         
     };
+    
+    /*
+    Execute System after decleration
+    */
+    // Create object and return from string class
+    this.createObject = function(_class, _data, _callBack){
+        this.import(_class, function(){
+            var _classObj = window;
+            var _classArr = _class.split('.');
+            for(var _classI = 0; _classI < _classArr.length; _classI++){
+                _classObj = _classObj[_classArr[_classI]];
+            }
+            var _bean = new _classObj(_data);
+            _callBack(_bean);
+        });
+    };
+    //Is JSONLD available
+    this.jsonLD = _settings.jsonLD || false;
+    if(this.jsonLD && document.querySelector('script[type="application/ld+json"]')){
+        try{
+            this.jsonLDDefination = JSON.parse(document.querySelector('script[type="application/ld+json"]').innerHTML);
+        }catch(e){
+            this.jsonLDDefination = {};
+        }
+        // if jsonLDProvieded load application
+        
+        this.mainApp = {};
+        this.mainAppElements = [];
+        if(this.jsonLDDefination.push){
+            for(var _appIndex = 0; _appIndex < this.jsonLDDefination.length; _appIndex++){
+                if(this.jsonLDDefination[_appIndex]['@type'] && this.jsonLD[this.jsonLDDefination[_appIndex]['@type']]){
+                    var _appClass = this.jsonLD[this.jsonLDDefination[_appIndex]['@type']];
+                    this.createObject(_appClass, this.jsonLDDefination[_appIndex], function(_obj){
+                        _instance.mainAppElements.push(_obj);
+                        _instance.mainApp[_instance.jsonLDDefination[_appIndex]['@type']] = _instance.mainAppElements[_appIndex];
+                    });
+                }
+            }
+        }
+        else if(this.jsonLDDefination['@type'] && this.jsonLD[this.jsonLDDefination['@type']]){
+            var _appClass = this.jsonLD[this.jsonLDDefination['@type']];
+            this.createObject(_appClass, this.jsonLDDefination, function(_obj){
+                _instance.mainAppElements.push(_obj);
+                _instance.mainApp[_instance.jsonLDDefination['@type']] = _instance.mainAppElements[0];
+            });
+        }
+    }
 
 }
