@@ -538,13 +538,13 @@ var System = function(_settings){
      * Depending import
      */
     var _addDependedImport = function(_fileString, _importConfig){
-        console.log('_addDependedImport');
-        var _importStrArr = _fileString.match(/this.import( ){0,}\(( ){0,}"[a-zA-Z0-9.]*"( ){0,}\)(( ){0,};){0,}/g);
+        //console.log('_addDependedImport');
+        var _importStrArr = _fileString.match(/this.import( ){0,}\(( ){0,}['"][a-zA-Z0-9.]*['"]( ){0,}\)(( ){0,};){0,}/g);
         if(_importStrArr && _importStrArr.length && _importStrArr.length>0){
             
             for(var _importStrI = 0; _importStrI< _importStrArr.length; _importStrI++){
                 var _importStr = _importStrArr[_importStrI];
-                var _importPackage = _importStr.split("\"")[1];
+                var _importPackage = _importStr.split(/['"]/)[1];
                 _fileString = _fileString.replace(_importStr, "");
                 if(!_importConfig.imports)_importConfig.imports = [];
                 _importConfig.imports.push(_importPackage);
@@ -554,6 +554,40 @@ var System = function(_settings){
         }
         return _fileString;
     }
+    
+    /*
+     * Depending import
+     */
+    var _ExtendPackage = function(_fileString, _importConfig){
+        var _importStrArr = _fileString.match(/this.extend( ){0,}\(( ){0,}['"][a-zA-Z0-9.]{0,}['"]( ){0,}\)( ){0,};/g);
+        var _isExtendClassIsImported = true;
+        var _packageArr = [];
+        if(_importStrArr && _importStrArr.length && _importStrArr.length>0){
+            
+            for(var _importStrI = 0; _importStrI< _importStrArr.length; _importStrI++){
+                var _importStr = _importStrArr[_importStrI];
+                var _importPackage = _importStr.split(/['"]/)[1];
+                var _importPath = _extractPath(_importPackage, _instance.src)+".js";
+                if(_cache[_importPath]){
+                    var _extendStr = _cache[_importPath];
+                    _extendStr = _extendStr.substring(_extendStr.indexOf('{')+1,_extendStr.lastIndexOf('}'));
+                    _fileString = _fileString.replace(_importStr, _extendStr);
+                }else{
+                    _isExtendClassIsImported = false;                    
+                    _packageArr.push(_importPackage);
+                }
+            }
+            
+        }
+        if(!_isExtendClassIsImported){
+            if(!_classList[_importConfig.package])_importQueue.unshift({package: _importConfig.package});
+            for(var _packageI = 0; _packageI< _packageArr.length; _packageI++){
+                var _importPackage = _packageArr[_packageI];
+                if(!_classList[_importPackage])_importQueue.unshift({package: _importPackage});
+            }
+        }
+        return (_isExtendClassIsImported)?_fileString:_isExtendClassIsImported;
+    }
 
     /*
      * loop Import Process 
@@ -562,9 +596,17 @@ var System = function(_settings){
         _isImporting = true;
         //console.log(_instance.dumpImportQueue());
         var _importConfig = _importQueue.shift();
+        while(_classList[_importConfig.package]){
+            _importConfig = _importQueue.shift();
+        }
         var _currentImportPackage = _importConfig.package;
         _getFile(_extractPath(_currentImportPackage, _instance.src)+".js", false, function(_fileString){
             if(_fileString){
+                _fileString = _ExtendPackage(_fileString, _importConfig);
+                if(!_fileString){
+                    _importLoopTrigger();
+                    return;
+                }
                 _fileString = _addDependedImport(_fileString, _importConfig);
                 _fileString = _initiatePackage(_currentImportPackage, _fileString);
                 if(_aopConfiguration){                    
