@@ -520,7 +520,7 @@ var System = function(_settings){
                 var _fncPart = _fnStr.match(/[a-zA-Z_0-9]{0,}( ){0,}=/g)[0];
                 _fncPart = _fncPart.split("=")[0].replace(/ /g, "");
                 var _callaopMatch = _package+"."+_fncPart;
-                _callaopMatch = _callaopMatch.match(_pkExecution);
+                _callaopMatch = _callaopMatch.match(_pkExecution.replace(/\./g,"\\.").replace("*",".*"));
                 if(_callaopMatch && _callaopMatch.length && _callaopMatch.length>0){
                     _aopDetail = _aop;
                     _aopDetail.functionName = _fncPart;

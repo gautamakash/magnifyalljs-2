@@ -59,6 +59,26 @@ this.__getCurrentPath = function(){
 this.__getClassName = function(){
     return _currentPackage;
 }
+
+ /**
+   * Import this package befor current package
+   * @memberof Object
+   * @param {string} _package Dependent Package to import first
+   */
+this.import=function(_package){
+    console.log("Dependent Package import is not supported at runtime.");
+}
+
+ /**
+   * Extend this package
+   * @memberof Object
+   * @param {string} _package Extend this package
+   */
+this.extend=function(_package){    
+    console.log("Extending Package is not supported at runtime.");
+}
+
+
 // listners, subscribers
 var _onChangeListners = {};
 // Method to subscribe with unique id

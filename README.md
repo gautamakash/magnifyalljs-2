@@ -1,2 +1,2 @@
 # magnifyalljs
-Competed: AOP, Import, BeanFactory, JSONLD
+Competed: AOP, Import, BeanFactory, JSONLD, Extend
