@@ -596,6 +596,10 @@ var System = function(_settings){
         _isImporting = true;
         //console.log(_instance.dumpImportQueue());
         var _importConfig = _importQueue.shift();
+        if(!_importConfig){
+            _importLoopTrigger();
+            return;
+        }
         while(_classList[_importConfig.package]){
             _importConfig = _importQueue.shift();
         }
