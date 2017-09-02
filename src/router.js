@@ -22,6 +22,7 @@ var Router = function(_config){
   var _nextRoute = false;
   var _prevRoute = false;
   var _currentRoute = false;
+  var _callBacks = [];
   var _debug = _config.debug || false;
   if(_config.routes){
     for(var _routeI = 0; _routeI < _config.routes.length; _routeI++){
@@ -53,6 +54,15 @@ var Router = function(_config){
       _currentRoute = _nextRoute;
       _nextRoute = false;
       _currentRoute.obj.__render(_instance.bindElement);
+      if(_callBacks && _callBacks.length > 0){
+        for(var _callBackI = 0; _callBackI< _callBacks.length; _callBackI++){
+          try{
+            _callBacks[_callBackI](_instance.currentRoute);
+          }catch(e){
+            console.log(e);
+          }
+        }
+      }
     }
   }
 
@@ -82,6 +92,51 @@ var Router = function(_config){
         _onLeaveHookCallBack(true);
       }
     }
+  }
+ /**
+   * Load next route
+   * @public
+   */
+  this.goNext = function(){
+    var _nextRoute = false;
+    var _markCurrentRoute = false;
+    for(var _localRouteName in _instance.routes){
+      if(_markCurrentRoute){
+        _nextRoute = _localRouteName;
+      }
+      if(this.currentRoute == _localRouteName){
+        _markCurrentRoute = true;
+      }else{
+        _markCurrentRoute = false;
+      }
+    }
+    if(_nextRoute){
+      this.loadRoute(_nextRoute);
+    }
+  }
+ /**
+   * Load Back route
+   * @public
+   */
+  this.goBack = function(){
+    var _backRoute = false;
+    var _previousRoute = false;
+    for(var _localRouteName in _instance.routes){
+      if(this.currentRoute == _localRouteName && _previousRoute){
+        _backRoute = _previousRoute;
+      }
+      _previousRoute = _localRouteName;
+    }
+    if(_backRoute){
+      this.loadRoute(_backRoute);
+    }
+  }
+  /**
+   * CallBack on route change
+   * @public
+   */
+  this.onRouteChange = function(_callBack){
+    _callBacks.push = _callBack;
   }
   if(_config.defaultRoute){
     this.loadRoute(_config.defaultRoute);

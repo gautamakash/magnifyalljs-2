@@ -27,6 +27,9 @@ system.import("com.Test", function(){
     window.test = new com.Test();
     test.__render(document.querySelectorAll('#log'));
     test.show();
+    window.test_1 = new com.Test({name: "Testing"});
+    test_1.__render(document.querySelectorAll('#log1'));
+    test_1.show();
 }).import("com.Test1", function(){
     window.test1 = new com.Test1();
 });
