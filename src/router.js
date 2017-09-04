@@ -136,7 +136,7 @@ var Router = function(_config){
    * @public
    */
   this.onRouteChange = function(_callBack){
-    _callBacks.push = _callBack;
+    _callBacks.push(_callBack);
   }
   if(_config.defaultRoute){
     this.loadRoute(_config.defaultRoute);
