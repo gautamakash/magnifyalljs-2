@@ -1,10 +1,12 @@
+var magnifyall = magnifyall || {};
+
 /**
  * Route Class
  * @constructor
  * @param {JSON} _config - Configuratin for route object
  * @author Akash Gautam
  */
-var Route = function(_config){
+magnifyall.Route = function(_config){
     this.name = _config.name;
     this.obj = _config.obj;
     this.onEnter = _config.onEnter;
@@ -15,7 +17,7 @@ var Route = function(_config){
  * @constructor
  * @param {JSON} _config - Configuratin for router object
  */
-var Router = function(_config){
+magnifyall.Router = function(_config){
   var _instance = this;
   this.id = _config.id;
   this.routes = {};

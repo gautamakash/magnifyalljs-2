@@ -1,23 +1,24 @@
 
-var __systems = {};
-var __aops = {};
-
+var magnifyall = {
+    __systems: {},
+    __aops: {}
+};
 /**
  * System Class
  * @constructor
  * @param {JSON} _settings - Configuratin for system object
  * @author Akash Gautam
  */
-var System = function(_settings){
+magnifyall.System = function(_settings){
     _settings = _settings || {};
     
     // System Name
     this.name = _settings.name || "default";
     // Check if system is already initialize then return the System
-    if(__systems[this.name]){
-        return __systems[this.name];
+    if(magnifyall.__systems[this.name]){
+        return magnifyall.__systems[this.name];
     }else{ // Store system instance for external reffrence
-        __systems[this.name] = this;
+        magnifyall.__systems[this.name] = this;
     }
     // Source path
     this.src = _settings.src || "src";
@@ -484,11 +485,11 @@ var System = function(_settings){
                     var _fnStringArr = _fileString.split(_functionStr);
                     var _fnDefination = _functionStr+"";
                     var _aopKey = _instance.name+"_"+_aopConfig.scope+"_"+_aopConfig.package+"_"+_aopConfig.functionName;
-                    __aops[_aopKey] = _aopConfig;
+                    magnifyall.__aops[_aopKey] = _aopConfig;
                     var _aopData = JSON.stringify(_aopConfig);
                     if(_aopConfig.before){
                         _fnDefination += "\n";
-                        _fnDefination += "__aops['"+_aopKey+"'].before("+_aopData+", arguments);\n";
+                        _fnDefination += "magnifyall.__aops['"+_aopKey+"'].before("+_aopData+", arguments);\n";
                     }
                     
                     _fileString = _fnStringArr[0]+_fnDefination+_fnStringArr[1];

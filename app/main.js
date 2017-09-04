@@ -1,4 +1,4 @@
-var system = new System({
+var system = new magnifyall.System({
     aop: [{
     // Aop reference name
         "name": "logger",

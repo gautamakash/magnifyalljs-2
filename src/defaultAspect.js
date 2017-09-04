@@ -39,7 +39,7 @@ if(arguments && arguments.length>0){
    * @return {Object} Current System where this object is pooled
    */
 this.__getSystem = function(){
-    return __systems[_system];
+    return magnifyall.__systems[_system];
 }
 // get data current path
  /**
@@ -224,7 +224,7 @@ this.__queryChildElements = function(_query){
    * @return {string} evaluable string which will return current object
    */
 this.__getReference = function(){
-    var returnString = '__systems.';
+    var returnString = 'magnifyall.__systems.';
     returnString += _system;
     returnString += '.getObject(';
     returnString += "'"+this.__UID+"')";
