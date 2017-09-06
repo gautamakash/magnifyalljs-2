@@ -12,8 +12,13 @@
         <!-- load system libs -->
         <script src="lib/Magnifyall.min.js"></script>
         <script src="lib/router.min.js"></script>
+        <link href="app.css" rel="stylesheet" type="text/css">
     </head>
     <body>
+<div id="main"></div>
+<div class="login_button">
+    <input type="button" class="button" value="Sign In" onclick="this.classList.add('loading');" onmouseover="this.classList.remove('loading');"/>
+</div>
 <div id="log"></div>
 <div id="log1"></div>
 <div id="route"></div>

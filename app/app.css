@@ -1,0 +1,111 @@
+body{
+    font-family: Arial;
+}
+#main{
+    width: 800px;
+    margin: 10px auto;
+    padding: 20px;
+    border: 1px solid #888888;
+    border-radius: 10px 20px;
+    color: #444444;
+}
+.input{
+    width: 100%;
+    position: relative;
+    padding-top: 15px;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+.input>input{
+    width: 100%;
+    line-height: 20px;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    font-size: 20px;
+    padding: 2px 10px;
+    border-bottom: 1px solid #aaaaaa;
+}
+.input.error>input{
+    border-bottom: 1px solid #ff0000;
+}
+.input>.description{
+    position: absolute;
+    top: 0px;
+    z-index: -1;
+    transition: all 0.2s;
+}
+.input>.description.empty{
+    top: 15px;
+    font-size: 20px;
+    padding: 2px 10px;
+    color: #aaaaaa;
+}
+.input>.error_msg{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    float: right;
+    color: #ff0000;
+    display: none;
+}
+.input.error>.error_msg{
+    display: block;
+}
+/*Login Button*/
+.login_button{
+    padding: 10px;
+}
+input.button{
+    width: auto;
+    line-height: 24px;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    border-radius: 20px;
+    transition: all 0.5s;
+    cursor: pointer;
+    background: url("images/arrow.png");
+    background-color: #dddddd;
+    color: #444444;
+    padding: 15px 35px;
+    margin: 5px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position-x: -100%;
+}
+input.button:HOVER{
+    border-radius: 5px;
+    background-color: #444444;
+    color: #ffffff;
+    background-position-x: 100%;
+}
+input.button.primary_bt:HOVER{
+    box-shadow: 2px 5px 2px rgba(0,0,0,0.4);
+    background-color: #009688;
+}
+input.button.secendary_bt:HOVER{
+    box-shadow: 2px 5px 2px rgba(0,0,0,0.4);
+    background-color: #db4437;
+}
+input.button.loading,input.button.loading:HOVER{
+    background: url("images/loading.gif");
+    background-repeat: no-repeat;
+    background-position-x: 0%;
+    background-size: contain;   
+    background-color: #dddddd;
+    color: #888888;
+    cursor: default;
+    padding-left: 60px;
+    padding-right: 10px;
+    border-radius: 30px;
+}
+input.button[disabled],input.button[disabled]:HOVER{
+    background-position-x: -100%;
+    background-color: #efefef;
+    color: #888888;
+    cursor: default;
+    border-radius: 30px;
+}

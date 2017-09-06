@@ -37,3 +37,17 @@ system.getBean("com.Bean", "001", function(_obj){
     window.bean = _obj;
     console.log(bean.serialize());
 });
+
+system.import("com.magnifyall.form.Input",function(){
+    window.userName = new com.magnifyall.form.Input({
+        name: "user_name",
+        description: "Please enter User Name",
+        validateOnIntract: function(_value){
+            if(_value.match(/^[a-zA-Z0-9_@]{0,}$/g)){
+                return false;
+            }
+            return "Invalid Format";
+        }
+    });
+    window.userName.__render(document.querySelectorAll('#main'));
+});

@@ -474,7 +474,7 @@ magnifyall.System = function(_settings){
     // Update String function with Aspects
     var _initiateAspect = function(_fileString, _package){
         //var _aopRegEx = new RegExp("(this.|var ( ){0,})[a-zA-Z_0-9.]{0,}( ){0,}=( ){0,}function\([a-zA-Z_0-9 ,]{0,}\)( ){0,}{", "g");
-        var _functionsStrArr = _fileString.match(/((this.|var ( ){0,})[a-zA-Z_0-9.]{0,}( ){0,}=( ){0,}){0,}(function){0,}( ){0,}\([a-zA-Z_0-9 ,]{0,}\)( ){0,}(=>){0,}( ){0,}{/g);
+        var _functionsStrArr = _fileString.match(/((this.|var ( ){0,})[a-zA-Z_0-9.]{0,}( ){0,}=( ){0,}){0,}(((function)( ){0,}\([a-zA-Z_0-9 ,]{0,}\)( ){0,}{)|\(( ){0,}[a-zA-Z_0-9.]{0,}( ){0,}\)( ){0,}=>( ){0,}\{)/g);
         if(_functionsStrArr && _functionsStrArr.length && _functionsStrArr.length>1){
             
             for(var _functionStrI = 1; _functionStrI< _functionsStrArr.length; _functionStrI++){
@@ -517,7 +517,13 @@ magnifyall.System = function(_settings){
                 // got Scope
                 _localExecution = _localExecution.substr(2,_localExecution.length);
                 var _pkExecution = _localExecution.split("(..)")[0];
-                var _fncPart = _fnStr.match(/[a-zA-Z_0-9]{0,}( ){0,}=/g)[0];
+                var _fncPartMatch =  _fnStr.match(/[a-zA-Z_0-9]{0,}( ){0,}=/g);
+                var _fncPart = "";
+                if(_fncPartMatch && _fncPartMatch.length>0){
+                    var _fncPart = _fncPartMatch[0];
+                }else{
+                    return false;
+                }
                 _fncPart = _fncPart.split("=")[0].replace(/ /g, "");
                 var _callaopMatch = _package+"."+_fncPart;
                 _callaopMatch = _callaopMatch.match(_pkExecution.replace(/\./g,"\\.").replace("*",".*"));
