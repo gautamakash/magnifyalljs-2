@@ -51,3 +51,7 @@ system.import("com.magnifyall.form.Input",function(){
     });
     window.userName.__render(document.querySelectorAll('#main'));
 });
+system.import("com.FruitList",function(){
+  window.fruits = new com.FruitList();
+  window.fruits.__render(document.querySelectorAll('#fruits'));
+});

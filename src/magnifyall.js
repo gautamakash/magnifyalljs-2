@@ -337,7 +337,7 @@ magnifyall.System = function(_settings){
                 value: '',
                 type: 'show'
             }
-            var _directives = _template.match(/{{[a-zA-Z]{0,}:[a-zA-Z._@-]{1,}}}/g);
+            var _directives = _template.match(/{{[a-zA-Z._@-]{0,}:[a-zA-Z._@-]{1,}}}/g);
             //console.log(_directives);
             if(_directives){
                 for(var _directiveIndex = 0; _directiveIndex < _directives.length; _directiveIndex++){
@@ -345,8 +345,8 @@ magnifyall.System = function(_settings){
                     var _stringArr = _directive.substring(2,_directive.length-2).split(":");
                     _retObj.type = _stringArr[0];
                     var _value = this.getDataValue(_data,_stringArr[1]);
-                    if(_retObj.type != '' && _data[_retObj.type]){
-                        _value = _data[_retObj.type](_value);
+                    if(_retObj.type != '' && this.getDataValue(_data,_retObj.type)){
+                        _value = this.getDataValue(_data,_retObj.type)(_value);
                     }else if(_retObj.type != '' && _data['@root'] && _data['@root'][_retObj.type]){
                         _value = _data['@root'][_retObj.type](_value);
                     }
