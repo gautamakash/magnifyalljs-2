@@ -117,7 +117,8 @@ input.button[disabled],input.button[disabled]:HOVER{
     padding-bottom: 5px;
     margin-bottom: 10px;
 }
-.select>input{
+.select>select{
+    cursor: text;
     width: 100%;
     line-height: 20px;
     background: transparent;
@@ -128,7 +129,7 @@ input.button[disabled],input.button[disabled]:HOVER{
     padding: 2px 10px;
     border-bottom: 1px solid #aaaaaa;
 }
-.select.error>input{
+.select.error>select{
     border-bottom: 1px solid #ff0000;
 }
 .select>.description{
@@ -153,25 +154,4 @@ input.button[disabled],input.button[disabled]:HOVER{
 }
 .select.error>.error_msg{
     display: block;
-}
-.select>.options{
-    position: absolute;
-    border: 1px solid #dddddd;
-    background-color: #eeeeee;
-    width: 100%;
-    border-radius: 10px;
-    padding: 10px;
-    box-sizing: border-box;
-    overflow-y: auto;
-}
-.select>.options>div{
-  cursor: pointer;
-  border-bottom: 1px solid #dddddd;
-  padding: 5px;
-  box-sizing: border-box;
-  transition: all 0.5s;
-}
-.select>.options>div:hover{
-  background-color: #444444;
-  color: #eeeeee;
 }

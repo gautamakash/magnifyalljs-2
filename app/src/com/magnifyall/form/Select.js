@@ -27,7 +27,7 @@ Select = function(_config){
     if(this.value || this.value !=""){
       for(var _optionI = 0; _optionI<_instance.options.length; _optionI++){
           var _option = _instance.options[_optionI];
-          if(this.__traversePath(this.optionNode.name,_option) === this.value){
+          if(this.__traversePath(this.optionNode.value,_option) === this.value){
             return _option;
           }
       }
@@ -50,23 +50,6 @@ Select = function(_config){
   this._uiFocus = function(){
       if(_instance.isEmpty){
           _instance.ele.desc.classList.remove('empty');
-      }
-      _instance.ele.options.style.display = "block";
-      while (_instance.ele.options.firstChild) {
-          _instance.ele.options.removeChild(_instance.ele.options.firstChild);
-      }
-      for(var _optionI = 0; _optionI<_instance.options.length; _optionI++){
-        var _option = _instance.options[_optionI];
-        var _optionDiv = document.createElement('div');
-        _optionDiv.innerHTML = _instance.__traversePath(_instance.optionNode.name,_option);
-        _optionDiv.setAttribute("data-on-select", _instance.__traversePath(_instance.optionNode.value,_option))
-        _optionDiv.onclick = function(e){
-          _instance.value = e.target.innerHTML;
-          _instance.ele.input.value = _instance.value;
-          _instance.ele.options.style.display = "none";
-          _instance._uiChange();
-        }
-        _instance.ele.options.append(_optionDiv);
       }
   }
   this._uiBlur = function(){
@@ -119,7 +102,7 @@ Select = function(_config){
             },
             childs:[
                 {
-                    input: {
+                    select: {
                         prop:{
                             type: "{{getType:name}}",
                             name: "{{:name}}",
@@ -140,7 +123,31 @@ Select = function(_config){
                                 fn: '_uiKeyUp',
                                 arg: []
                             }
-                        }
+                        },
+                        childs: [
+                          {
+                            option: {
+                              prop: {
+                                value: ""
+                              }
+                            }
+                          },
+                          {
+                            "#for":{
+                              data: "options",
+                              template: {
+                                option: {
+                                  prop: {
+                                    value: "{{:"+_instance.optionNode.value+"}}"
+                                  },
+                                  childs: [
+                                    {"#text":"{{:"+_instance.optionNode.name+"}}"}
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        ]
                     }
                 },
                 {
@@ -162,26 +169,15 @@ Select = function(_config){
                             {"#text":"{{:error}}"}
                         ]
                     }
-                },
-                {
-                  div: {
-                    prop:{
-                      class: "options",
-                      style: {
-                        "display": "none"
-                      }
-                    }
-                  }
                 }
             ]
         }
     }
   ]);
   this.__afterRender = function(){
-      _instance.ele.input = _instance.__queryChildElements("#select_"+_instance.__UID+">input")[0];
+      _instance.ele.input = _instance.__queryChildElements("#select_"+_instance.__UID+">select")[0];
       _instance.ele.desc = _instance.__queryChildElements("#select_"+_instance.__UID+">.description")[0];
       _instance.ele.wrap = _instance.__queryChildElements("#select_"+_instance.__UID)[0];
       _instance.ele.error = _instance.__queryChildElements("#select_"+_instance.__UID+">.error_msg")[0];
-      _instance.ele.options = _instance.__queryChildElements("#select_"+_instance.__UID+">.options")[0];
   };
 }
