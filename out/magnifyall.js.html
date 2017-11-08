@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: magnifyall.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: magnifyall.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>
+var magnifyall = {
+    __systems: {},
+    __aops: {}
+};
+/**
+ * System Class
+ * @constructor
+ * @param {JSON} _settings - Configuratin for system object
+ * @author Akash Gautam
+ */
+magnifyall.System = function(_settings){
+    _settings = _settings || {};
+
+    // System Name
+    this.name = _settings.name || "default";
+    // Check if system is already initialize then return the System
+    if(magnifyall.__systems[this.name]){
+        return magnifyall.__systems[this.name];
+    }else{ // Store system instance for external reffrence
+        magnifyall.__systems[this.name] = this;
+    }
+    // Source path
+    this.src = _settings.src || "src";
+    // Library Path
+    this.lib = _settings.lib || "lib";
+    // Setting debug flag
+    this.debug = (_settings &amp;&amp; _settings.debug)?_settings.debug:false;
+    // BeanFactory Configuration
+
+
+
+    /*
+     * Private Variables
+     */
+    var _instance = this;
+    // Bean Factory Configuration
+    var _beanFactory = (_settings &amp;&amp; _settings.beanFactory)?_settings.beanFactory:{};
+    // AOP Configuration
+    var _aopConfiguration = (_settings &amp;&amp; _settings.aop)?_settings.aop:false;
+    // UID
+    var _uids = {};
+    // Beans pool
+    var _beans = {};
+    // Import Queue
+    var _importQueue = [];
+    // Class List
+    var _classList = {};
+    // imprting flag
+    var _isImporting = false;
+    // System Cache
+    var _cache = {};
+
+
+    // generate GUID
+    /**
+     * Generate UID
+     * @public
+     * @return {string} unique GUID
+     */
+    this.getUID = function(){
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    };
+    // Register Object to Pool
+
+    /**
+     * Register System Generated Object:- Could be use to register diffrent System object
+     * @public
+     * @param {Object} _obj System generated object
+     */
+    this.registerObject = function(_obj){
+        if(_obj &amp;&amp; _obj.__UID){
+            _uids[_obj.__UID] = _obj;
+        }
+    };
+    // get Object from pool
+    /**
+     * Get object by UID if generated or register by current System
+     * @public
+     * @param {string} _uid Object uid &lt;Object>.__UID
+     * @return {Object} Object from object pool
+     */
+    this.getObjectByUID = function(_uid){
+        return _uids[_uid];
+    };
+    // Import Class
+
+    /**
+     * Import Class in system from System source path
+     * @public
+     * @param {string} _package Package defination of class, like com.magnifyall.Test represent &lt;system.src>/com/magnifyall/Test.js
+     * @param {function} _onImportCallBack Callback method called once import complete
+     * @return {Object} this object (current system object)
+     */
+    this.import = function(_package, _onImportCallBack){
+        if(!_classList[_package]){
+            _importQueue.push({package: _package, onLoad: _onImportCallBack});
+        }else{
+            setTimeout(_onImportCallBack,0);
+        }
+        if(!_isImporting){
+            _importProcess();
+        }
+        return this;
+    };
+
+    // Append Bean Config
+    /**
+     * Append Bean Configutation for package defination (cann't override if already define).
+     * @public
+     * @param {string} _className Package defination of class, like com.magnifyall.Test
+     * @param {Object} _config Configuration for Bean Factory
+     */
+    this.appendBeanConfig = function(_className, _config){
+        if(_beanFactory &amp;&amp; !_beanFactory[_className]){
+            _beanFactory[_className] = _config;
+        }
+    }
+
+    // get Bean
+    /**
+     * return Bean for class if Bean Factory Configuration is already defined
+     * @public
+     * @param {string} _class Package defination of class, like com.magnifyall.Test
+     * @param {Object} _query Will passed to &lt;BeanConfiguration>.fetchService(_query, _callBack)
+     * @param {Object} _callback  Callback method will passed to fetchService function
+     */
+    this.getBean = function(_class, _query, _callback){
+        if(_beanFactory &amp;&amp; _beanFactory[_class]){
+            this.import(_class, function(){
+                var _beanConfig = _beanFactory[_class];
+                var _data = {};
+                var _dataId = _class+JSON.stringify(_query).replace(/{|}|"|:/g , "_");
+                if(_beans[_dataId]){
+                    _callback(_beans[_dataId]);
+                    return;
+                }
+
+                if(_beanConfig &amp;&amp; _beanConfig.fetchService){
+                    _beanConfig.fetchService(_query, function(_dataString){
+                        _data = JSON.parse(_dataString);
+                        var _classObj = window;
+                        var _classArr = _class.split('.');
+                        for(var _classI = 0; _classI &lt; _classArr.length; _classI++){
+                            _classObj = _classObj[_classArr[_classI]];
+                        }
+                        var _bean = new _classObj(_data);
+                        _beans[_dataId] = _bean;
+                        //_beans[_bean.__UID] = _bean;
+                        _callback(_beans[_dataId]);
+                    })
+                }
+            });
+        }
+    }
+    // update bean
+    /**
+     * Update Bean for class if Bean Factory Configuration is already defined
+     * @public
+     * @param {Object} _obj Bean object created by current system
+     * @param {Object} _callback  Callback method will passed to updateService function
+     */
+    this.updateBean = function(_obj, _callback){
+        var _className = _obj.__getClassName();
+        if(_beanFactory &amp;&amp; _beanFactory[_className]){
+            var _beanConfig = _beanFactory[_className];
+            if(_beanConfig &amp;&amp; _beanConfig.updateService){
+                _beanConfig.updateService(_obj, _callback);
+                return;
+            }else{
+                _callback(false);
+                return;
+            }
+        }
+        _callback(false);
+        return;
+    }
+    // Create new thread and execute code.
+    /**
+     * Run in new thread
+     * @public
+     * @param {Object} _fnc  function to call in new thread
+     */
+    this.run = function(_fnc){
+        setTimeout(_fnc, 0);
+    };
+
+    //Template Processor
+
+    /*
+     * Template Processor
+     */
+    var TemplateProcessor = function(_config){
+        var _instanceTemplateProcessor = this;
+        var __template = '';
+        this.setTemplate = function(_template){
+            __template = _template;
+        }
+        this.elements = false;
+        this.rootElement = false;
+        var __data = {};
+        this.setData = function(_data){
+            __data = _data;
+        }
+        this.process = function(_template, _ele, _data, _isAppend){
+            this.setTemplate (_template);
+            this.setData(_data);
+            for(var _eleIndex = 0; _eleIndex&lt;_ele.length; _eleIndex++ ){
+                this.render(_ele[_eleIndex], _isAppend);
+            }
+        }
+        this.render = function(_ele, isAppend){
+            this.rootElement = _ele;
+            if(!this.elements){
+                this.elements = {};
+            }
+            if(!isAppend){
+                while (this.rootElement.firstChild) {
+                    this.rootElement.removeChild(this.rootElement.firstChild);
+                }
+            }
+            for(var _templateIndex = 0; _templateIndex&lt;__template.length; _templateIndex++){
+                var _childTemplate = __template[_templateIndex];
+                var _childElement = this.populateElement(this.rootElement,_childTemplate, __data);
+                if(_childElement){
+                    this.rootElement.appendChild(_childElement);
+                }
+            }
+        }
+        this.populateElement = function(_ele, _template, _data){
+            var _retObj = '';
+            for(var _eleName in _template){
+                if(_eleName === 'render'){
+                    if(_data.__render){
+                        var _isRenderAppend = false;
+                        if(_template[_eleName].append){
+                            _isRenderAppend = true;
+                        }
+                        _data.__render(_ele, _isRenderAppend);
+                        return;
+                    }
+                }
+                if(_eleName === '#text'){
+                    var _bind = this.getBindInfo(_template[_eleName], _data);
+                    //console.log(_bind);
+                    var _wrapElement = document.createElement('div');
+                    _wrapElement.innerHTML = _bind.value;
+                    //var _textNode = document.createTextNode(_bind.value);
+                    for(var _wrapI = 0; _wrapI &lt; _wrapElement.childNodes.length; _wrapI++){
+                        _ele.appendChild(_wrapElement.childNodes[_wrapI]);
+                    }
+                    //_ele.appendChild();
+                    return;
+                }
+                if(_eleName === '#for'){
+                    var _forConfig = _template[_eleName];
+                    var _dataArr = this.getDataValue(_data, _forConfig.data);
+                    if(_dataArr &amp;&amp; _dataArr.length > 0){
+                        for(var _dataArrIndex = 0; _dataArrIndex&lt;_dataArr.length; _dataArrIndex++ )
+                        {
+                            var _childData = _dataArr[_dataArrIndex];
+                            _childData['@root']=_data;
+                            _childData[_forConfig.index||'@index'] = _dataArrIndex+1;
+                            var _childElement = this.populateElement(_ele, _forConfig.template, _childData);
+                            if(_childElement){
+                                _ele.appendChild(_childElement);
+                            }
+                        }
+                    }
+                    return;
+                }
+                _retObj = document.createElement(_eleName);
+                if(_template[_eleName].prop){
+                    // add prop
+                    for(var _propName in _template[_eleName].prop){
+                        //console.log(_propName);
+                        if(_propName === "style"){
+                            var _styleString = '';
+                            for(var _styleName in _template[_eleName].prop[_propName]){
+                                _styleString += _styleName+':'+this.getBindInfo(_template[_eleName].prop[_propName][_styleName],_data).value+'; '
+                            }
+                            _retObj.setAttribute("style", _styleString);
+                            //console.log(_styleString);
+                        }else if(_propName.indexOf('on') == -1){
+                            _retObj.setAttribute(_propName, this.getBindInfo(_template[_eleName].prop[_propName],_data).value);
+                        }else if(_propName.indexOf('on') == 0){
+                            // bind methods
+                            var _bindEvent = _template[_eleName].prop[_propName];
+                            //console.log(_bindEvent);
+                            /*var _args = [];
+                            for(var _argIndex = 0; _argIndex &lt; _bindEvent.arg.length; _argIndex++){
+                                var _arg = _bindEvent.arg[_argIndex];
+                                if(_arg.match(/^{{[a-zA-Z._@-]{1,}}}$/g)){
+                                    _arg = this.getDataValue(_data, _arg.substring(2,_arg.length-2));
+                                }
+                                _args.push(_arg);
+                            }*/
+                           //var _fn = this.getDataValue(_data, _bindEvent.fn);
+                            _retObj.setAttribute("data-on-"+_propName.substring(2,_propName.length), _bindEvent.fn);
+                            _retObj.addEventListener(_propName.substring(2,_propName.length), function(e){
+                                var _fn = _instanceTemplateProcessor.getDataValue(_data, e.target.getAttribute("data-on-"+e.type));
+
+                                var _args = [];
+                                for(var _argIndex = 0; _argIndex &lt; _bindEvent.arg.length; _argIndex++){
+                                    var _arg = _bindEvent.arg[_argIndex];
+                                    if(_arg.match(/^{{[a-zA-Z._@-]{1,}}}$/g)){
+                                        _arg = _instanceTemplateProcessor.getDataValue(_data, _arg.substring(2,_arg.length-2));
+                                    }
+                                    _args.push(_arg);
+                                }
+                                _fn.apply(_fn,_args);
+                            })
+                        }
+                    }
+                }
+                if(_template[_eleName].childs){
+                    // add child
+                    for(var _childIndex = 0; _childIndex&lt;_template[_eleName].childs.length; _childIndex++){
+                        var _child = _template[_eleName].childs[_childIndex]
+                        var _childElement = this.populateElement(_retObj, _child, _data);
+                        if(_childElement){
+                            _retObj.appendChild(_childElement);
+                        }
+                    }
+                }
+            }
+            return _retObj;
+        }
+        this.getBindInfo = function(_template, _data){
+            var _retObj = {
+                value: '',
+                type: 'show'
+            }
+            var _directives = _template.match(/{{[a-zA-Z._@-]{0,}:[a-zA-Z._@-]{1,}}}/g);
+            //console.log(_directives);
+            if(_directives){
+                for(var _directiveIndex = 0; _directiveIndex &lt; _directives.length; _directiveIndex++){
+                    var _directive = _directives[_directiveIndex];
+                    var _stringArr = _directive.substring(2,_directive.length-2).split(":");
+                    _retObj.type = _stringArr[0];
+                    var _value = this.getDataValue(_data,_stringArr[1]);
+                    if(_retObj.type != '' &amp;&amp; this.getDataValue(_data,_retObj.type)){
+                        _value = this.getDataValue(_data,_retObj.type)(_value);
+                    }else if(_retObj.type != '' &amp;&amp; _data['@root'] &amp;&amp; _data['@root'][_retObj.type]){
+                        _value = _data['@root'][_retObj.type](_value);
+                    }
+                    _template = _template.replace(_directive, _value);
+                }
+            }
+            _retObj.value = _template;
+            return _retObj;
+        }
+        this.getDataValue = function(_data, _nameSpace){
+            if(_nameSpace === '@'){
+                return _data;
+            }
+            if(_nameSpace.indexOf('.') != -1){
+                var _parentNameSpace = _nameSpace.split('.')[0];
+                if(_data[_parentNameSpace]){
+                    return this.getDataValue(_data[_parentNameSpace], _nameSpace.substring(_parentNameSpace.length+1,_nameSpace.length));
+                }
+            }
+            return _data[_nameSpace];
+        }
+    };
+    this.templateProcessor = false;
+    this.getTemplateProcessor = function(){
+        if(this.templateProcessor){
+            return this.templateProcessor;
+        }
+        return new TemplateProcessor({});
+    }
+
+    /*
+    Private Methods
+    */
+    // Extract and return path from package
+    var _extractPath = function(_filePath, _basePath){
+        var _fileArr = _filePath.split('.');
+        var _retObj = _basePath;
+        for(var _fileArrI = 0; _fileArrI &lt; _fileArr.length; _fileArrI++){
+            _retObj+= "/"+_fileArr[_fileArrI];
+        }
+        return _retObj;
+    };
+    /*
+    return String value from response take file path, should cache, system
+    */
+    var _getFile = function(_filePath, uncached, _callback){
+        var _returnString = "";
+        if(!uncached &amp;&amp; _cache[_filePath]){
+            _returnString = _cache[_filePath];
+            _callback(_returnString);
+        }else{
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                _returnString = this.responseText;
+                if(!uncached){
+                    _cache[_filePath] = _returnString;
+                }
+                if (this.readyState == 4 &amp;&amp; this.status == 200) {
+                    _callback(_returnString);
+                }else if(this.readyState == 4){
+                    _callback(false);
+                }
+            };
+            xhttp.open("GET", _filePath, true);
+            xhttp.send();
+        }
+    };
+
+    // create package and update package in string class defination
+    var _initiatePackage = function(_package, _fileString){
+        var _fileArr = _package.split('.');
+        var _baseObj = window;
+        var _className = "";
+        for(var _fileArrI = 0; _fileArrI &lt; _fileArr.length; _fileArrI++){
+            if(_fileArr.length>1 &amp;&amp; _fileArrI &lt; _fileArr.length-1){
+                _baseObj[_fileArr[_fileArrI]] = _baseObj[_fileArr[_fileArrI]] || {};
+                _baseObj = _baseObj[_fileArr[_fileArrI]];
+            }else{
+                _className = _fileArr[_fileArrI];
+            }
+        }
+        var _methodRegEx = new RegExp("([^a-zA-Z_.]|^)"+_className+"[ ]{0,}=", "g");
+        _fileString = _fileString.replace(_methodRegEx, "\n"+_package+" =");
+
+        return _fileString;
+    };
+
+
+    // Update String function with Aspects
+    var _initiateProxy = function( _fileString, _libPath, _basePath, _package, _callback){
+        // Aspect String
+        _getFile(_libPath+"/defaultAspect.js", false, function(_aspectString){
+            try{
+                var _currentPackage = _package;
+                var _currentPath = _extractPath(_package, _basePath);
+                _aspectString += '\n';
+                _aspectString += ' var _currentPackage = "'+_currentPackage+'"; \n';
+                _aspectString += ' var _currentPath = "'+_currentPath+'"; \n';
+                _aspectString += ' var _system = "'+_instance.name+'"; \n';
+                _aspectString += ' this.__UID = this.__getSystem().getUID(); \n';
+                _aspectString += ' this.__getSystem().registerObject(this); \n';
+                var _aspectRegex = new RegExp("function[ ]{0,}([^{]*){", "");
+                var _functionArr = _fileString.match(_aspectRegex);
+                var _preFunctionString = _fileString.substring(0,_functionArr.index+_functionArr['0'].length);
+                var _postFunctionString = _fileString.substring(_functionArr.index+_functionArr['0'].length, _fileString.length);
+                _fileString = _preFunctionString+" \n"+_aspectString+" \n"+_postFunctionString;
+            }catch(e){
+                //@TODO: Log Error
+            }
+            _callback(_fileString);
+        });
+    };
+
+    var _importLoopTrigger = function(){
+            if(_importQueue.length>0){
+                _importProcess();
+            }else{
+                _isImporting = false;
+            }
+    }
+
+    /*
+     * AOP Implementation
+     */
+    // Update String function with Aspects
+    var _initiateAspect = function(_fileString, _package){
+        //var _aopRegEx = new RegExp("(this.|var ( ){0,})[a-zA-Z_0-9.]{0,}( ){0,}=( ){0,}function\([a-zA-Z_0-9 ,]{0,}\)( ){0,}{", "g");
+        var _functionsStrArr = _fileString.match(/((this.|var ( ){0,})[a-zA-Z_0-9.]{0,}( ){0,}=( ){0,}){0,}(((function)( ){0,}\([a-zA-Z_0-9 ,]{0,}\)( ){0,}{)|\(( ){0,}[a-zA-Z_0-9.]{0,}( ){0,}\)( ){0,}=>( ){0,}\{)/g);
+        if(_functionsStrArr &amp;&amp; _functionsStrArr.length &amp;&amp; _functionsStrArr.length>1){
+
+            for(var _functionStrI = 1; _functionStrI&lt; _functionsStrArr.length; _functionStrI++){
+                var _functionStr = _functionsStrArr[_functionStrI];
+                var _aopConfig = _getAOPDetail(_functionStr, _package);
+                if(_aopConfig){
+                    //console.log(_aopConfig);
+                    var _fnStringArr = _fileString.split(_functionStr);
+                    var _fnDefination = _functionStr+"";
+                    var _aopKey = _instance.name+"_"+_aopConfig.scope+"_"+_aopConfig.package+"_"+_aopConfig.functionName;
+                    magnifyall.__aops[_aopKey] = _aopConfig;
+                    var _aopData = JSON.stringify(_aopConfig);
+                    if(_aopConfig.before){
+                        _fnDefination += "\n";
+                        _fnDefination += "magnifyall.__aops['"+_aopKey+"'].before("+_aopData+", arguments);\n";
+                    }
+
+                    _fileString = _fnStringArr[0]+_fnDefination+_fnStringArr[1];
+                }
+            }
+
+        }
+        //console.log(_functionsStrArr);
+
+        return _fileString;
+    };
+
+    var _getAOPDetail = function(_fnStr, _package){
+        var _aopDetail = false;
+        for(var _aopI = 0; _aopI&lt; _aopConfiguration.length; _aopI++){
+            var _localFnStr = _fnStr+"";
+            var _aop = _aopConfiguration[_aopI];
+            var _isPublic = false;
+            var _localExecution = _aop.execution+"";
+            if(_localExecution.indexOf("public ") == 0){
+                _isPublic = true;
+                _localExecution = _localExecution.split("public ")[1];
+            }
+            if(!_isPublic || (_isPublic &amp;&amp; _fnStr.indexOf("this.") == 0)){
+                // got Scope
+                _localExecution = _localExecution.substr(2,_localExecution.length);
+                var _pkExecution = _localExecution.split("(..)")[0];
+                var _fncPartMatch =  _fnStr.match(/[a-zA-Z_0-9]{0,}( ){0,}=/g);
+                var _fncPart = "";
+                if(_fncPartMatch &amp;&amp; _fncPartMatch.length>0){
+                    var _fncPart = _fncPartMatch[0];
+                }else{
+                    return false;
+                }
+                _fncPart = _fncPart.split("=")[0].replace(/ /g, "");
+                var _callaopMatch = _package+"."+_fncPart;
+                _callaopMatch = _callaopMatch.match(_pkExecution.replace(/\./g,"\\.").replace("*",".*"));
+                if(_callaopMatch &amp;&amp; _callaopMatch.length &amp;&amp; _callaopMatch.length>0){
+                    _aopDetail = _aop;
+                    _aopDetail.functionName = _fncPart;
+                    _aopDetail.package = _package;
+                    _aopDetail.scope = (_fnStr.indexOf("this.") == 0)?"public":"private";
+                    _hasAOP = true;
+                }
+            }
+        }
+
+        return _aopDetail;
+    };
+
+    /*
+     * Depending import
+     */
+    var _addDependedImport = function(_fileString, _importConfig){
+        //console.log('_addDependedImport');
+        var _importStrArr = _fileString.match(/this.import( ){0,}\(( ){0,}['"][a-zA-Z0-9.]*['"]( ){0,}\)(( ){0,};){0,}/g);
+        if(_importStrArr &amp;&amp; _importStrArr.length &amp;&amp; _importStrArr.length>0){
+
+            for(var _importStrI = 0; _importStrI&lt; _importStrArr.length; _importStrI++){
+                var _importStr = _importStrArr[_importStrI];
+                var _importPackage = _importStr.split(/['"]/)[1];
+                _fileString = _fileString.replace(_importStr, "");
+                if(!_importConfig.imports)_importConfig.imports = [];
+                _importConfig.imports.push(_importPackage);
+                if(!_classList[_importPackage])_importQueue.unshift({package: _importPackage});
+            }
+
+        }
+        return _fileString;
+    }
+
+    /*
+     * Depending import
+     */
+    var _ExtendPackage = function(_fileString, _importConfig){
+        var _importStrArr = _fileString.match(/this.extend( ){0,}\(( ){0,}['"][a-zA-Z0-9.]{0,}['"]( ){0,}\)( ){0,};/g);
+        var _isExtendClassIsImported = true;
+        var _packageArr = [];
+        if(_importStrArr &amp;&amp; _importStrArr.length &amp;&amp; _importStrArr.length>0){
+
+            for(var _importStrI = 0; _importStrI&lt; _importStrArr.length; _importStrI++){
+                var _importStr = _importStrArr[_importStrI];
+                var _importPackage = _importStr.split(/['"]/)[1];
+                var _importPath = _extractPath(_importPackage, _instance.src)+".js";
+                if(_cache[_importPath]){
+                    var _extendStr = _cache[_importPath];
+                    _extendStr = _extendStr.substring(_extendStr.indexOf('{')+1,_extendStr.lastIndexOf('}'));
+                    _fileString = _fileString.replace(_importStr, _extendStr);
+                }else{
+                    _isExtendClassIsImported = false;
+                    _packageArr.push(_importPackage);
+                }
+            }
+
+        }
+        if(!_isExtendClassIsImported){
+            if(!_classList[_importConfig.package])_importQueue.unshift({package: _importConfig.package});
+            for(var _packageI = 0; _packageI&lt; _packageArr.length; _packageI++){
+                var _importPackage = _packageArr[_packageI];
+                if(!_classList[_importPackage])_importQueue.unshift({package: _importPackage});
+            }
+        }
+        return (_isExtendClassIsImported)?_fileString:_isExtendClassIsImported;
+    }
+
+    /*
+     * loop Import Process
+     */
+    var _importProcess = function(){
+        _isImporting = true;
+        //console.log(_instance.dumpImportQueue());
+        var _importConfig = _importQueue.shift();
+        if(!_importConfig){
+            _importLoopTrigger();
+            return;
+        }
+        while(_classList[_importConfig.package] &amp;&amp; _importQueue.length>0){
+            _importConfig = _importQueue.shift();
+        }
+        var _currentImportPackage = _importConfig.package;
+        _getFile(_extractPath(_currentImportPackage, _instance.src)+".js", false, function(_fileString){
+            if(_fileString){
+                _fileString = _ExtendPackage(_fileString, _importConfig);
+                if(!_fileString){
+                    _importLoopTrigger();
+                    return;
+                }
+                _fileString = _addDependedImport(_fileString, _importConfig);
+                _fileString = _initiatePackage(_currentImportPackage, _fileString);
+                if(_aopConfiguration){
+                    _fileString = _initiateAspect(_fileString, _currentImportPackage);
+                }
+                _initiateProxy(_fileString, _instance.lib, _instance.src, _currentImportPackage, function(_fileString){
+                    //console.log(_fileString);
+                    //console.log(_importConfig);
+                    eval(_fileString);
+                    _classList[_currentImportPackage] = _fileString;
+                    if(_importConfig.onLoad){
+                        if(_importConfig.imports){
+                            var _dependentImport = JSON.parse(JSON.stringify(_importConfig.imports));
+                            var _waitForImport = setInterval(function(){
+                                var _isDependentLoaded = true;
+                                for(var _importI=0; _importI&lt; _dependentImport.length;_importI++){
+                                    if(!_classList[_dependentImport[_importI]]){
+                                        _isDependentLoaded = false;
+                                    }
+                                }
+                                if(_isDependentLoaded){
+                                    clearInterval(_waitForImport);
+                                    setTimeout(_importConfig.onLoad,0);
+                                }
+                            },100);
+                        }else{
+                            setTimeout(_importConfig.onLoad,0);
+                        }
+                    }
+                    _importLoopTrigger();
+                });
+            }else{
+                _importLoopTrigger();
+            }
+        });
+
+    };
+
+    /*
+    Execute System after decleration
+    */
+    // Create object and return from string class
+    this.createObject = function(_class, _data, _callBack){
+        this.import(_class, function(){
+            var _classObj = window;
+            var _classArr = _class.split('.');
+            for(var _classI = 0; _classI &lt; _classArr.length; _classI++){
+                _classObj = _classObj[_classArr[_classI]];
+            }
+            var _bean = new _classObj(_data);
+            _callBack(_bean);
+        });
+    };
+    //Is JSONLD available
+    this.jsonLD = _settings.jsonLD || false;
+    if(this.jsonLD &amp;&amp; document.querySelector('script[type="application/ld+json"]')){
+        try{
+            this.jsonLDDefination = JSON.parse(document.querySelector('script[type="application/ld+json"]').innerHTML);
+        }catch(e){
+            this.jsonLDDefination = {};
+        }
+        // if jsonLDProvieded load application
+
+        this.mainApp = {};
+        this.mainAppElements = [];
+        if(this.jsonLDDefination.push){
+            for(var _appIndex = 0; _appIndex &lt; this.jsonLDDefination.length; _appIndex++){
+                if(this.jsonLDDefination[_appIndex]['@type'] &amp;&amp; this.jsonLD[this.jsonLDDefination[_appIndex]['@type']]){
+                    var _appClass = this.jsonLD[this.jsonLDDefination[_appIndex]['@type']];
+                    this.createObject(_appClass, this.jsonLDDefination[_appIndex], function(_obj){
+                        _instance.mainAppElements.push(_obj);
+                        _instance.mainApp[_instance.jsonLDDefination[_appIndex]['@type']] = _instance.mainAppElements[_appIndex];
+                    });
+                }
+            }
+        }
+        else if(this.jsonLDDefination['@type'] &amp;&amp; this.jsonLD[this.jsonLDDefination['@type']]){
+            var _appClass = this.jsonLD[this.jsonLDDefination['@type']];
+            this.createObject(_appClass, this.jsonLDDefination, function(_obj){
+                _instance.mainAppElements.push(_obj);
+                _instance.mainApp[_instance.jsonLDDefination['@type']] = _instance.mainAppElements[0];
+            });
+        }
+    }
+
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="magnifyall.Route.html">Route</a></li><li><a href="magnifyall.Router.html">Router</a></li><li><a href="magnifyall.System.html">System</a></li></ul><h3>Namespaces</h3><ul><li><a href="Object.html">Object</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Nov 08 2017 12:24:26 GMT+1100 (AUS Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

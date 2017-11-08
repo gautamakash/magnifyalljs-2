@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: router.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: router.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var magnifyall = magnifyall || {};
+
+/**
+ * Route Class
+ * @constructor
+ * @param {JSON} _config - Configuratin for route object
+ * @author Akash Gautam
+ */
+magnifyall.Route = function(_config){
+    this.name = _config.name;
+    this.obj = _config.obj;
+    this.onEnter = _config.onEnter;
+    this.onLeave = _config.onLeave;
+}
+/**
+ * Router Class
+ * @constructor
+ * @param {JSON} _config - Configuratin for router object
+ */
+magnifyall.Router = function(_config){
+  var _instance = this;
+  this.id = _config.id;
+  this.routes = {};
+  var _nextRoute = false;
+  var _prevRoute = false;
+  var _currentRoute = false;
+  var _callBacks = [];
+  var _debug = _config.debug || false;
+  if(_config.routes){
+    for(var _routeI = 0; _routeI &lt; _config.routes.length; _routeI++){
+      var _route = _config.routes[_routeI];
+      this.routes[_route.name] = _route;
+    }
+  }
+  /**
+   * Add Route object to router
+   * @public
+   * @param {Object} _route Route object
+   */
+  this.addRoute = function(_route){
+      this.routes[_route.name] = _route;
+  }
+  this.bindElement = _config.bindElement || false;
+   /**
+   * Bind Dom element to this Router
+   * @public
+   * @param {Object} _ele Dom Node
+   */
+  this.bind = function(_ele){
+       this.bindElement = _ele || this.bindElement;
+  }
+
+  var _onEnterHookCallBack = function(_isAllow){
+    if(_isAllow){
+      _instance.currentRoute = _nextRoute.name;
+      _currentRoute = _nextRoute;
+      _nextRoute = false;
+      _currentRoute.obj.__render(_instance.bindElement);
+      if(_callBacks &amp;&amp; _callBacks.length > 0){
+        for(var _callBackI = 0; _callBackI&lt; _callBacks.length; _callBackI++){
+          try{
+            _callBacks[_callBackI](_instance.currentRoute);
+          }catch(e){
+            console.log(e);
+          }
+        }
+      }
+    }
+  }
+
+  var _onLeaveHookCallBack = function(_isAllow){
+    if(_isAllow){
+      if(_nextRoute
+        &amp;&amp; _nextRoute.onEnter){
+        _nextRoute.onEnter(_currentRoute, _nextRoute, _onEnterHookCallBack);
+      }else{
+        _onEnterHookCallBack(true);
+      }
+    }
+  }
+ /**
+   * Load route by route Name
+   * @public
+   * @param {string} _routeName Route name
+   */
+  this.loadRoute = function(_routeName){
+    if(_instance.routes[_routeName]
+    &amp;&amp; _instance.bindElement){
+      _nextRoute = _instance.routes[_routeName];
+      if(_currentRoute
+      &amp;&amp; _currentRoute.onLeave){
+        _currentRoute.onLeave(_currentRoute, _nextRoute, _onLeaveHookCallBack);
+      }else{
+        _onLeaveHookCallBack(true);
+      }
+    }
+  }
+ /**
+   * Load next route
+   * @public
+   */
+  this.goNext = function(){
+    var _nextRoute = false;
+    var _markCurrentRoute = false;
+    for(var _localRouteName in _instance.routes){
+      if(_markCurrentRoute){
+        _nextRoute = _localRouteName;
+      }
+      if(this.currentRoute == _localRouteName){
+        _markCurrentRoute = true;
+      }else{
+        _markCurrentRoute = false;
+      }
+    }
+    if(_nextRoute){
+      this.loadRoute(_nextRoute);
+    }
+  }
+ /**
+   * Load Back route
+   * @public
+   */
+  this.goBack = function(){
+    var _backRoute = false;
+    var _previousRoute = false;
+    for(var _localRouteName in _instance.routes){
+      if(this.currentRoute == _localRouteName &amp;&amp; _previousRoute){
+        _backRoute = _previousRoute;
+      }
+      _previousRoute = _localRouteName;
+    }
+    if(_backRoute){
+      this.loadRoute(_backRoute);
+    }
+  }
+  /**
+   * CallBack on route change
+   * @public
+   */
+  this.onRouteChange = function(_callBack){
+    _callBacks.push(_callBack);
+  }
+  if(_config.defaultRoute){
+    this.loadRoute(_config.defaultRoute);
+    this.currentRoute = _config.defaultRoute;
+    if(this.currentRoute){
+      _currentRoute = this.routes[this.currentRoute] || false;
+    }
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="magnifyall.Route.html">Route</a></li><li><a href="magnifyall.Router.html">Router</a></li><li><a href="magnifyall.System.html">System</a></li></ul><h3>Namespaces</h3><ul><li><a href="Object.html">Object</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Nov 08 2017 12:24:26 GMT+1100 (AUS Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

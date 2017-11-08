@@ -49,9 +49,26 @@ system.import("com.magnifyall.form.Input",function(){
             return "Invalid Format";
         }
     });
-    window.userName.__render(document.querySelectorAll('#main'));
+    window.userName.__render(document.querySelectorAll('#userName'));
 });
 system.import("com.FruitList",function(){
   window.fruits = new com.FruitList();
   window.fruits.__render(document.querySelectorAll('#fruits'));
+});
+system.import("com.magnifyall.form.Select",function(){
+    window.state = new com.magnifyall.form.Select({
+        name: "user_name",
+        description: "Please select State",
+        validateOnIntract: function(_value){
+            if(_value.match(/^[a-zA-Z0-9_@]{0,}$/g)){
+                return false;
+            }
+            return "Invalid Format";
+        },
+        options: [
+          {name: "North South Whale", value: "NSW"},
+          {name: "Victoria", value: "VIC"}
+        ]
+    });
+    window.state.__render(document.querySelectorAll('#state'));
 });
