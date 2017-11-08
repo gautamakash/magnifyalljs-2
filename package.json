@@ -1,7 +1,7 @@
 {
   "name": "magnifyall",
   "description": "Magnifyall js framework",
-  "version": "2.0.0",
+  "version": "2.0.0-rc",
   "scripts": {
     "start": "grunt",
     "doc": "./node_modules/.bin/jsdoc ./src"
