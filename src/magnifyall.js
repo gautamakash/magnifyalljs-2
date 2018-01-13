@@ -304,8 +304,19 @@ magnifyall.System = function(_settings){
                            //var _fn = this.getDataValue(_data, _bindEvent.fn);
                             _retObj.setAttribute("data-on-"+_propName.substring(2,_propName.length), _bindEvent.fn);
                             _retObj.addEventListener(_propName.substring(2,_propName.length), function(e){
-                                var _fn = _instanceTemplateProcessor.getDataValue(_data, e.target.getAttribute("data-on-"+e.type));
-
+                                var _eventDom = false;
+                                var _getEventName = function(_domEle, _eventType){
+                                    if(_domEle.hasAttribute("data-on-"+_eventType)){
+                                        _eventDom = _domEle;
+                                        return _domEle.getAttribute("data-on-"+_eventType);
+                                    }else{
+                                        return _getEventName(_domEle.parentNode, _eventType);
+                                    }
+                                };
+                                var _fn = _instanceTemplateProcessor.getDataValue(_data, _getEventName(e.target,e.type));
+                                if(_eventDom!=_retObj){
+                                    return;
+                                }
                                 var _args = [];
                                 for(var _argIndex = 0; _argIndex < _bindEvent.arg.length; _argIndex++){
                                     var _arg = _bindEvent.arg[_argIndex];

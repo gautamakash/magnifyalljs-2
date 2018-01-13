@@ -72,3 +72,7 @@ system.import("com.magnifyall.form.Select",function(){
     });
     window.state.__render(document.querySelectorAll('#state'));
 });
+system.import("com.EventTester",function(){
+  window.eventTester = new com.EventTester();
+  window.eventTester.__render(document.querySelectorAll('#tester'));
+});
