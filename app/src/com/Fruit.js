@@ -10,4 +10,7 @@ Fruit = function(_config){
   this.show=function(_name){
     return "Fruit: "+_name;
   }
+  this.getDesc = function(){
+    return "some description for "+this.name;
+  }
 }

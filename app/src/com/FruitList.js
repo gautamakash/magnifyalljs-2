@@ -21,7 +21,7 @@ FruitList = function(_config){
         template:{
           div:{
             childs: [
-              {"#text": "{{@root.prefix:name}}{{@root.show:name}}"}
+              {"#text": "{{@root.prefix:name}}{{@root.show:name}} >> {{:desc}}"}
             ]
           }
         }

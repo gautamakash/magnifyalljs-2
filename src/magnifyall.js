@@ -378,6 +378,13 @@ magnifyall.System = function(_settings){
             return _retObj;
         }
         this.getDataValue = function(_data, _nameSpace){
+            var getGetterMethod = function(_name){
+                var retObj = "get";
+                if(_name && _name != ""){
+                    return retObj+_name.substring(0,1).toUpperCase()+_name.substring(1,_name.length);
+                }
+                return retObj;
+            };
             if(_nameSpace === '@'){
                 return _data;
             }
@@ -385,7 +392,14 @@ magnifyall.System = function(_settings){
                 var _parentNameSpace = _nameSpace.split('.')[0];
                 if(_data[_parentNameSpace]){
                     return this.getDataValue(_data[_parentNameSpace], _nameSpace.substring(_parentNameSpace.length+1,_nameSpace.length));
+                }else if(_data[getGetterMethod(_parentNameSpace)] && typeof _data[getGetterMethod(_parentNameSpace)] === "function"){
+                    return this.getDataValue(_data[getGetterMethod(_parentNameSpace)](), _nameSpace.substring(_parentNameSpace.length+1,_nameSpace.length));
                 }
+            }
+            if(_data[_nameSpace]){
+                return _data[_nameSpace];
+            }else if(_data[getGetterMethod(_nameSpace)] && typeof _data[getGetterMethod(_nameSpace)] === "function"){                
+                return _data[getGetterMethod(_nameSpace)]();
             }
             return _data[_nameSpace];
         }
