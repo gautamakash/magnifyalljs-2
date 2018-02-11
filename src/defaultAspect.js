@@ -138,10 +138,19 @@ var __change = function(_objectInstance){
    * @memberof Object
    * @return {string} serialize all property of object which can be use to transit or compare
    */
-this.serialize = function(){
-    var _localInstance = JSON.parse(JSON.stringify(this));
-    delete _localInstance.__bind;
-    return JSON.stringify(_localInstance);
+this.serialize = function(_suppress){
+    var _suppress = _suppress || [];
+    _suppress[_suppress.length] = "_bind";
+    _suppress[_suppress.length] = "@root";
+    _suppress[_suppress.length] = "@index";
+    return JSON.stringify(this, function(_key,_value){
+        for(var _i = 0; _i<_suppress.length; _i++){
+            if(_key == _suppress[_i]){
+                return undefined;
+            }
+        }
+        return _value;
+    });
 }
 // check if value(serialize) are equal
  /**
