@@ -272,6 +272,16 @@ magnifyall.System = function(_settings){
                                 _ele.appendChild(_childElement);
                             }
                         }
+                    }else{
+                        for(var _key in _dataArr){
+                            var _childData = _dataArr[_key];
+                            _childData['@root']=_data;
+                            _childData[_forConfig.index||'@index'] = _key;
+                            var _childElement = this.populateElement(_ele, _forConfig.template, _childData);
+                            if(_childElement){
+                                _ele.appendChild(_childElement);
+                            }
+                        }
                     }
                     return;
                 }

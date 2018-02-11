@@ -76,3 +76,7 @@ system.import("com.EventTester",function(){
   window.eventTester = new com.EventTester();
   window.eventTester.__render(document.querySelectorAll('#tester'));
 });
+system.import("com.JsonLoop",function(){
+  window.jsonLoop = new com.JsonLoop();
+  window.jsonLoop.__render(document.querySelectorAll('#json-loop'));
+});
