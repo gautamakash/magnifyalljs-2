@@ -335,6 +335,7 @@ magnifyall.System = function(_settings){
                                     }
                                     _args.push(_arg);
                                 }
+                                _args.push(e);
                                 _fn.apply(_fn,_args);
                             })
                         }
