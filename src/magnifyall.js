@@ -708,33 +708,45 @@ magnifyall.System = function(_settings){
     };
     //Is JSONLD available
     this.jsonLD = _settings.jsonLD || false;
-    if(this.jsonLD && document.querySelector('script[type="application/ld+json"]')){
-        try{
+    this.jsonLDDefinations = [];
+    if(this.jsonLD && document.querySelectorAll('script[type="application/ld+json"]')){        
+        var _jsondls = document.querySelectorAll('script[type="application/ld+json"]');
+        for(var _jsonI = 0; _jsonI < _jsondls.length; _jsonI++){            
+            try{
+                this.jsonLDDefinations[this.jsonLDDefinations.length] = JSON.parse(_jsondls[_jsonI].innerHTML);
+            }catch(e){
+                this.jsonLDDefinations[this.jsonLDDefinations.length] = {};
+            }
+        }
+        /*try{
             this.jsonLDDefination = JSON.parse(document.querySelector('script[type="application/ld+json"]').innerHTML);
         }catch(e){
             this.jsonLDDefination = {};
-        }
+        }*/
         // if jsonLDProvieded load application
 
         this.mainApp = {};
         this.mainAppElements = [];
-        if(this.jsonLDDefination.push){
-            for(var _appIndex = 0; _appIndex < this.jsonLDDefination.length; _appIndex++){
-                if(this.jsonLDDefination[_appIndex]['@type'] && this.jsonLD[this.jsonLDDefination[_appIndex]['@type']]){
-                    var _appClass = this.jsonLD[this.jsonLDDefination[_appIndex]['@type']];
-                    this.createObject(_appClass, this.jsonLDDefination[_appIndex], function(_obj){
-                        _instance.mainAppElements.push(_obj);
-                        _instance.mainApp[_instance.jsonLDDefination[_appIndex]['@type']] = _instance.mainAppElements[_appIndex];
-                    });
-                }
-            }
-        }
-        else if(this.jsonLDDefination['@type'] && this.jsonLD[this.jsonLDDefination['@type']]){
-            var _appClass = this.jsonLD[this.jsonLDDefination['@type']];
-            this.createObject(_appClass, this.jsonLDDefination, function(_obj){
-                _instance.mainAppElements.push(_obj);
-                _instance.mainApp[_instance.jsonLDDefination['@type']] = _instance.mainAppElements[0];
-            });
+        for(var _jsonLDI = 0; _jsonLDI < this.jsonLDDefinations.length; _jsonLDI++){   
+             var jsonLDDefination = this.jsonLDDefinations[_jsonLDI];
+             if(jsonLDDefination.push){
+                 for(var _appIndex = 0; _appIndex < jsonLDDefination.length; _appIndex++){
+                     if(jsonLDDefination[_appIndex]['@type'] && this.jsonLD[jsonLDDefination[_appIndex]['@type']]){
+                         var _appClass = this.jsonLD[jsonLDDefination[_appIndex]['@type']];
+                         this.createObject(_appClass, jsonLDDefination[_appIndex], function(_obj){
+                             _instance.mainAppElements.push(_obj);
+                             _instance.mainApp[_obj['@type']] = _instance.mainAppElements[_instance.mainAppElements.length-1];
+                         });
+                     }
+                 }
+             }
+             else if(jsonLDDefination['@type'] && this.jsonLD[jsonLDDefination['@type']]){
+                 var _appClass = this.jsonLD[jsonLDDefination['@type']];
+                 this.createObject(_appClass, jsonLDDefination, function(_obj){
+                     _instance.mainAppElements.push(_obj);
+                     _instance.mainApp[_obj['@type']] = _instance.mainAppElements[_instance.mainAppElements.length-1];
+                 });
+             }
         }
     }
 
